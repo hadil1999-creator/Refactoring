@@ -18,7 +18,7 @@ else:
     df = pd.read_excel("Evaluation/Refactroing results GPT.xlsx")
 
 # === Ensure output columns exist ===
-for col in ["Gemma", "Qwen", "Llama3","Mistral","Deepseek","CodeLlama"]:
+for col in ["Qwen", "Llama3", "Deepseek", "CodeLlama", "Mistral", "Gemma"]:
     if col not in df.columns:
         df[col] = ""
 
@@ -70,11 +70,11 @@ Answer using ONLY this format:
 
 ollama_models = {
     "Llama3": "llama3.1:8b",
-    "Gemma": "Gemma2-9B",
+    "Gemma": "gemma2:9b",
     'CodeLlama': "codellama",
     "Deepseek":"deepseek-coder",
     "Qwen":"qwen2.5:7b",
-    "Mistral":"mistral-7b"
+    "Mistral":"mistral:7b"
 }
 
 # === MODEL CALL FUNCTIONS ===
@@ -137,10 +137,15 @@ for idx, row in df.iterrows():
 #            df.at[idx, col] = call_groq_model(model, prompt)
 
         for col, model in ollama_models.items():
+            # Skip if this model already has a result
+            if pd.notna(row[col]) and str(row[col]).strip() != "":
+                continue
+
+            print(f"  → Running {col}")
             df.at[idx, col] = call_ollama_model(model, prompt)
 
     except Exception as e:
-        for col in ["Gemma", "Qwen", "Llama3","Mistral","Deepseek","CodeLlama"]:
+        for col in ["Qwen", "Llama3","Deepseek","CodeLlama", "Mistral","Gemma"]:
             df.at[idx, col] = f"[ERROR] {e}"
         print(f"❌ Error in row {idx+1}: {e}")
 
